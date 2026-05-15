@@ -1442,6 +1442,12 @@
             text-shadow: 0 0 10px rgba(255, 170, 0, 0.3);
         }
 
+        .section-title i.sort-toggle-icon.pct {
+            color: #00d4ff;
+            /* 评分使用青蓝色提示 */
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
         .sort-indicator {
             font-size: 10px;
             font-weight: 900;
@@ -3027,11 +3033,11 @@
                         <i :class="['fas', config.icon, config.sortMode ? 'sort-toggle-icon' : '', config.sortMode]"
                             @click.stop="config.sortMode ? toggleSortMode(key) : null"
                             :style="{ cursor: config.sortMode ? 'pointer' : 'default' }"
-                            :title="config.sortMode ? '点击切换排序 (当前: ' + (config.sortMode === 'newest' ? '最新' : '热门') + ')' : ''"></i>
+                            :title="config.sortMode ? '点击切换排序 (当前: ' + (config.sortMode === 'newest' ? '最新' : (config.sortMode === 'pct' ? '评分' : '热门')) + ')' : ''"></i>
                         {{ config.title }}
                         <!-- 仅对 discover 分类显示排序角标 -->
                         <span v-if="config.sortMode && config.path.includes('/discover/')" class="sort-indicator">
-                            {{ config.sortMode === 'newest' ? 'NEW' : 'HOT' }}
+                            {{ config.sortMode === 'newest' ? 'NEW' : (config.sortMode === 'pct' ? 'PCT' : 'HOT') }}
                         </span>
                     </div>
                     <span class="expand-toggle" :class="{ expanded: expandedRows[key] }" @click="toggleRowExpand(key)"
@@ -5254,6 +5260,8 @@
                         if (config.sortMode === 'newest') {
                             const dateField = isMovie ? 'primary_release_date.desc' : 'first_air_date.desc';
                             sortParam = `&sort_by=${dateField}&vote_count.gte=10`;
+                        } else if (config.sortMode === 'pct') {
+                            sortParam = '&sort_by=vote_average.desc&vote_count.gte=100';
                         } else {
                             sortParam = '&sort_by=popularity.desc';
                         }
@@ -5287,7 +5295,9 @@
                     if (!config || !config.path.includes('/discover/')) return;
 
                     // 切换模式
-                    config.sortMode = config.sortMode === 'newest' ? 'popular' : 'newest';
+                    const sortModes = ['newest', 'popular', 'pct'];
+                    const currentIndex = sortModes.indexOf(config.sortMode);
+                    config.sortMode = sortModes[(currentIndex + 1) % sortModes.length];
                     console.log(`[排序切换] ${config.title} -> ${config.sortMode}`);
 
                     // 动画效果：先淡出
